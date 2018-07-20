@@ -12,24 +12,24 @@ if (typeof window !== 'undefined') {
   containmentPropType = PropTypes.instanceOf(window.Element);
 }
 
-function throttle (callback, limit) {
-    var wait = false;
-    return function () {
-        if (!wait) {
-            wait = true;
-            setTimeout(function () {
-                callback();
-                wait = false;
-            }, limit);
-        }
+function throttle(callback, limit) {
+  var wait = false;
+  return function () {
+    if (!wait) {
+      wait = true;
+      setTimeout(function () {
+        callback();
+        wait = false;
+      }, limit);
     }
+  }
 }
 
 function debounce(func, wait) {
   var timeout;
-  return function() {
+  return function () {
     var context = this, args = arguments;
-    var later = function() {
+    var later = function () {
       timeout = null;
       func.apply(context, args);
     };
@@ -48,6 +48,7 @@ module.exports = createReactClass({
       PropTypes.bool,
       PropTypes.oneOf(['top', 'right', 'bottom', 'left']),
     ]),
+    stayVisible: PropTypes.bool,
     delayedCall: PropTypes.bool,
     offset: PropTypes.oneOfType([
       PropTypes.shape({
@@ -82,6 +83,7 @@ module.exports = createReactClass({
     return {
       active: true,
       partialVisibility: false,
+      stayVisible: false,
       minTopValue: 0,
       scrollCheck: false,
       scrollDelay: 250,
@@ -229,6 +231,11 @@ module.exports = createReactClass({
       return this.state;
     }
 
+    if (this.state.isVisible === true && this.props.stayVisible === true) {
+      this.stopWatching()
+      return this.state;
+    };
+
     rect = el.getBoundingClientRect();
 
     if (this.props.containment) {
@@ -275,8 +282,8 @@ module.exports = createReactClass({
     // check for partial visibility
     if (this.props.partialVisibility) {
       var partialVisible =
-          rect.top <= containmentRect.bottom && rect.bottom >= containmentRect.top &&
-          rect.left <= containmentRect.right && rect.right >= containmentRect.left;
+        rect.top <= containmentRect.bottom && rect.bottom >= containmentRect.top &&
+        rect.left <= containmentRect.right && rect.right >= containmentRect.left;
 
       // account for partial visibility on a single edge
       if (typeof this.props.partialVisibility === 'string') {
@@ -292,7 +299,7 @@ module.exports = createReactClass({
 
     // Deprecated options for calculating offset.
     if (typeof offset.direction === 'string' &&
-        typeof offset.value === 'number') {
+      typeof offset.value === 'number') {
       console.warn('[notice] offset.direction and offset.value have been deprecated. They still work for now, but will be removed in next major version. Please upgrade to the new syntax: { %s: %d }', offset.direction, offset.value)
 
       isVisible = isVisibleWithOffset(offset, rect, containmentRect);
